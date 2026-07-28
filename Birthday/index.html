@@ -252,6 +252,17 @@
 
     .btn:active { transform: scale(0.96); }
 
+    #back-to-memories-btn {
+      position: absolute;
+      bottom: 60px;
+      right: 120px;
+      margin-top: 0;
+      z-index: 6;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+
     /* Swiper Album Styling */
     .swiper {
       width: 90vw;
@@ -765,6 +776,10 @@
     <h1 style="color: #ffffff; font-size: 2rem; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.15);">A Letter For You 💌</h1>
     <p id="letter-instruction" style="color: #ffffff; font-weight: 500; text-shadow: 0 1px 5px rgba(0,0,0,0.1);">Tap the heart seal to open!</p>
 
+    <button id="back-to-memories-btn" class="btn hidden" style="background: #8b5cf6;">
+      Back to Memories 💖
+    </button>
+
     <div class="letter-stage" id="letter-stage">
       
       <!-- Sealed Envelope Base -->
@@ -781,7 +796,7 @@
         <br>
         <p>Looking through all these pictures reminds me of how lucky I am to have you in my life. Every smile, every laugh, and every quiet moment we share means the world to me.</p>
         <br>
-        <p>Thank you for being my favorite person, my partner, and my biggest source of happiness. I hope this year brings you as much joy as you give to me and everyone around you.</p>
+        <p>Thank you for being my favorite person, my partner, and my biggest source of happiness. I hope this year brings you as much joy as you give to me everyone around you.</p>
         <br>
         <p style="text-align: right; font-weight: bold; margin-top: 20px; color: #be185d;">Forever & Always, <br> Collins❤️</p>
       </div>
@@ -1100,10 +1115,17 @@
     const letterBtn = document.getElementById('letter-btn');
     const waxSeal = document.getElementById('wax-seal');
     const letterStage = document.getElementById('letter-stage');
+    const backToMemoriesBtn = document.getElementById('back-to-memories-btn');
 
     letterBtn.addEventListener('click', () => {
       document.getElementById('screen-album').classList.add('hidden');
       document.getElementById('screen-letter').classList.remove('hidden');
+      playBackgroundMusic();
+    });
+
+    backToMemoriesBtn.addEventListener('click', () => {
+      document.getElementById('screen-letter').classList.add('hidden');
+      document.getElementById('screen-album').classList.remove('hidden');
       playBackgroundMusic();
     });
 
@@ -1116,6 +1138,10 @@
         letterStage.classList.add('open');
         document.getElementById('letter-instruction').textContent = "With all my love ❤️";
         launchConfetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
+
+        setTimeout(() => {
+          backToMemoriesBtn.classList.remove('hidden');
+        }, 5000);
       }, 700);
     });
   </script>
