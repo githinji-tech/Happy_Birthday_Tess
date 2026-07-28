@@ -792,16 +792,21 @@
   <!-- Swiper JS Script -->
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <audio id="partyHorn" src="Birthday_Party_Horn_Sound_Effect(256k).mp3" preload="auto"></audio>
-  <audio id="partyApplause" src="Birthday_Crowd_Party_Cheer___Sound_Effects,_Download(256k).mp3" preload="auto"></audio>
-  <audio id="backgroundMusic" src="[Non_Copyrighted_Music]_Carl_Storm_-_With_You_In_The_Morning_[Pop](256k).mp3" preload="auto" loop></audio>
+  <audio id="partyHorn" src="Birthday_Party_Horn_Sound_Effect(256k).mp3" preload="auto" playsinline webkit-playsinline></audio>
+  <audio id="partyApplause" src="Birthday_Crowd_Party_Cheer___Sound_Effects,_Download(256k).mp3" preload="auto" playsinline webkit-playsinline></audio>
+  <audio id="backgroundMusic" src="[Non_Copyrighted_Music]_Carl_Storm_-_With_You_In_The_Morning_[Pop](256k).mp3" preload="auto" loop playsinline webkit-playsinline></audio>
 
   <script>
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const sfxContext = new AudioCtx();
+    let sfxContext = null;
     let countdownStarted = false;
+    let audioUnlocked = false;
 
     function resumeSfxContext() {
+      if (!sfxContext) {
+        const AudioCtor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtor) return;
+        sfxContext = new AudioCtor();
+      }
       if (sfxContext.state === 'suspended') {
         sfxContext.resume().catch(() => {});
       }
@@ -811,8 +816,66 @@
     const partyApplause = document.getElementById('partyApplause');
     const backgroundMusic = document.getElementById('backgroundMusic');
 
+    function setAudioAttributes(audio) {
+      if (!audio) return;
+      audio.preload = 'auto';
+      audio.setAttribute('playsinline', 'true');
+      if ('webkitPlaysInline' in audio) {
+        audio.webkitPlaysInline = true;
+      }
+    }
+
+    [partyHorn, partyApplause, backgroundMusic].forEach(setAudioAttributes);
+
+    function waitForAudioReady(audio) {
+      if (!audio) return Promise.resolve(false);
+      if (audio.readyState >= 2) return Promise.resolve(true);
+
+      return new Promise(resolve => {
+        const done = () => {
+          cleanup();
+          resolve(true);
+        };
+        const fail = () => {
+          cleanup();
+          resolve(false);
+        };
+        const cleanup = () => {
+          audio.removeEventListener('canplay', done);
+          audio.removeEventListener('canplaythrough', done);
+          audio.removeEventListener('loadedmetadata', done);
+          audio.removeEventListener('error', fail);
+        };
+
+        audio.addEventListener('canplay', done, { once: true });
+        audio.addEventListener('canplaythrough', done, { once: true });
+        audio.addEventListener('loadedmetadata', done, { once: true });
+        audio.addEventListener('error', fail, { once: true });
+        audio.load();
+      });
+    }
+
+    async function playAudio(audio, volume = 0.8) {
+      if (!audio || !audioUnlocked) return;
+
+      try {
+        audio.currentTime = 0;
+        audio.volume = volume;
+        audio.muted = false;
+        await audio.play();
+      } catch (error) {
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+          await audio.play();
+        } catch (retryError) {
+          // Ignore playback errors on browsers that block autoplay.
+        }
+      }
+    }
+
     function playBackgroundMusic() {
-      if (!backgroundMusic) return;
+      if (!backgroundMusic || !audioUnlocked) return;
       backgroundMusic.volume = 0.25;
       if (backgroundMusic.paused) {
         backgroundMusic.play().catch(() => {});
@@ -825,29 +888,41 @@
       }
     }
 
-    function unlockAudioAndStart() {
+    async function unlockAudioAndStart() {
+      if (audioUnlocked) {
+        startCountdown();
+        const startPrompt = document.getElementById('start-prompt');
+        if (startPrompt) startPrompt.classList.add('hidden');
+        return;
+      }
+
+      audioUnlocked = true;
       resumeSfxContext();
+
+      await Promise.all([
+        waitForAudioReady(partyHorn),
+        waitForAudioReady(partyApplause),
+        waitForAudioReady(backgroundMusic)
+      ]);
+
       [partyHorn, partyApplause].forEach(audio => {
         if (!audio) return;
-        audio.muted = true;
         audio.currentTime = 0;
-        audio.play().then(() => {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.muted = false;
-        }).catch(() => {});
+        audio.muted = false;
       });
+
       startCountdown();
       const startPrompt = document.getElementById('start-prompt');
       if (startPrompt) startPrompt.classList.add('hidden');
     }
 
     document.documentElement.addEventListener('pointerdown', unlockAudioAndStart, { once: true, passive: true });
+    document.documentElement.addEventListener('touchstart', unlockAudioAndStart, { once: true, passive: true });
     document.documentElement.addEventListener('keydown', unlockAudioAndStart, { once: true, passive: true });
 
     function playSfx(type) {
       resumeSfxContext();
-      if (sfxContext.state === 'suspended') return;
+      if (!sfxContext || sfxContext.state === 'suspended') return;
       const now = sfxContext.currentTime;
 
       if (type === 'tick') {
@@ -866,15 +941,11 @@
     function launchConfetti(options) {
       confetti(options);
       if (partyHorn) {
-        partyHorn.currentTime = 0;
-        partyHorn.volume = 0.8;
-        partyHorn.play().catch(() => {});
+        playAudio(partyHorn, 0.8);
       }
       if (partyApplause) {
         setTimeout(() => {
-          partyApplause.currentTime = 0;
-          partyApplause.volume = 0.8;
-          partyApplause.play().catch(() => {});
+          playAudio(partyApplause, 0.8);
         }, 150);
       }
     }
