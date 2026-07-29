@@ -515,8 +515,9 @@
       }
 
       .screen {
-        min-height: auto;
-        padding: 16px 14px;
+        min-height: 100dvh;
+        justify-content: flex-start;
+        padding: 20px 14px 36px;
       }
 
       .screen h1,
@@ -569,9 +570,9 @@
       }
 
       .swiper {
-        width: 100%;
+        width: min(92vw, 340px);
         max-width: 340px;
-        height: 320px;
+        height: min(62vh, 320px);
         margin-top: 18px;
       }
 
@@ -587,7 +588,9 @@
       .letter-stage {
         width: 100%;
         max-width: 360px;
-        height: 700px;
+        height: 620px;
+        padding-bottom: 28px;
+        overflow: visible;
       }
 
       .envelope {
@@ -609,11 +612,14 @@
 
       .letter-paper {
         max-width: 320px;
-        height: 240px;
-        padding: 22px 18px;
+        min-height: 260px;
+        height: auto;
+        padding: 22px 18px 28px;
         font-size: 0.96rem;
         line-height: 1.55;
-        overflow-y: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: 54vh;
       }
 
       .letter-paper h3 {
@@ -621,10 +627,10 @@
       }
 
       .letter-stage.open .letter-paper {
-        bottom: 15px;
+        bottom: 20px;
         transform: translateX(-50%) translateY(0);
-        min-height: 420px;
-        max-height: 520px;
+        min-height: 360px;
+        max-height: calc(100dvh - 240px);
         opacity: 1;
         pointer-events: auto;
       }
@@ -639,6 +645,12 @@
       #screen-letter h1,
       #screen-countdown h2 {
         font-size: 1.8rem !important;
+      }
+
+      #back-to-memories-btn {
+        position: static;
+        margin: 12px auto 0;
+        align-self: center;
       }
 
       #screen-cake p,
@@ -680,8 +692,9 @@
 
       .letter-paper {
         max-width: 280px;
-        height: 220px;
-        padding: 20px 16px;
+        min-height: 240px;
+        height: auto;
+        padding: 20px 16px 24px;
         font-size: 0.92rem;
         line-height: 1.5;
       }
